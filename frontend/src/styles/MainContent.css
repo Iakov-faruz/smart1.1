@@ -1,0 +1,48 @@
+/* הגדרת רשת המוצרים */
+.product-grid {
+  display: grid;
+  /* יצירת עמודות שמתאימות את עצמן אוטומטית לגודל המסך */
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px; /* רווח בין הכרטיסים */
+  padding: 20px;
+}
+
+/* עיצוב הכרטיס הבודד כדי שייראה "נפרד" */
+.product-card {
+  background: #ffffff;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* צל שנותן עומק */
+  border: 1px solid #eaeaea;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-align: right; /* התאמה לעברית */
+}
+
+.product-card:hover {
+  transform: translateY(-5px); /* אפקט ריחוף */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.price {
+  color: #27ae60;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.add-to-cart {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+.add-to-cart:hover {
+  background-color: #2980b9;
+}

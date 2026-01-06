@@ -1,0 +1,26 @@
+/* index.css - גרסה נקייה לפריסה מלאה */
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  /* תמיכה בערכת נושא בהירה/כהה לפי מערכת ההפעלה */
+  color-scheme: light; 
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  /* ביטול הפלקס שמרכז את האתר */
+  display: block; 
+  background-color: #f4f7f6;
+  direction: rtl; /* תמיכה בעברית לכל אורך האתר */
+}
+
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
