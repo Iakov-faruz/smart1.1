@@ -1,0 +1,91 @@
+/* מבנה הכרטיס המקורי */
+.product-card {
+    position: relative;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #fff;
+    transition: all 0.5s ease; /* האנימציה עוברת פה */
+}
+
+/* אנימציית היעלמות */
+.product-card.fade-out {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+    pointer-events: none;
+}
+
+/* כפתורי הניהול (פלוס/מינוס) */
+.admin-stock-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    padding: 5px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    justify-content: center;
+}
+
+.stock-btn {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    background: #2c3e50;
+    color: white;
+}
+
+.stock-btn:hover { background: #34495e; }
+.stock-btn:disabled { background: #bdc3c7; }
+
+/* כפתור המחיקה התחתון (המעוגל שביקשת) */
+.delete-action-btn {
+    width: calc(100% + 30px); /* מפצה על ה-padding של הכרטיס */
+    margin: 0 -15px -15px -15px; /* נצמד לקצוות התחתונים */
+    padding: 12px;
+    background-color: #fff;
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+    border-radius: 0 0 8px 8px; /* עיגול תואם לכרטיס המקורי */
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.delete-action-btn:hover {
+    background-color: #e74c3c;
+    color: white;
+}
+
+/* כפתור הוספה לסל המקורי */
+.add-to-cart {
+    width: calc(100% + 30px);
+    margin: 0 -15px -15px -15px;
+    padding: 12px;
+    border: none;
+    background-color: #27ae60;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 0 0 8px 8px;
+}
+
+.add-to-cart:disabled {
+    background-color: #bdc3c7;
+}
+
+/* הודעות סטטוס */
+.out-of-stock-msg {
+    color: #e74c3c;
+    font-weight: bold;
+}

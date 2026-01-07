@@ -186,3 +186,8 @@
   background: none;
   cursor: pointer;
 }
+.logo h1 {
+    cursor: default; /* העכבר נשאר חץ רגיל ולא הופך ליד */
+    user-select: none; /* מונע סימון בכחול של הטקסט כשלוחצים מהר */
+    -webkit-user-select: none;
+}

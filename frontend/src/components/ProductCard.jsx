@@ -1,47 +1,72 @@
+import React, { useState } from 'react';
+import { updateProductStock } from '../api/update_product_qty'; 
+import { deleteProduct } from '../api/delete_product'; 
+import '../styles/ProductCard.css';
 
-// import React from 'react';
+const ProductCard = ({ product, onAddToCart, isAdmin, onDeleted }) => {
+  const [currentStock, setCurrentStock] = useState(product.stock_qty);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false); // סטייט לאנימציה
 
-// const ProductCard = ({ product, onAddToCart }) => {
-//   return (
-//     <div className="product-card">
-//       <div className="product-info">
-//         <h3>{product.ProductName}</h3> 
-//         <p className="price">₪{product.original_price}</p>
-//         <p className="stock">במלאי: {product.stock_qty}</p>
-//         <small className="category-tag">{product.CategoryName}</small>
-//       </div>
-//       <button className="add-to-cart" onClick={() => onAddToCart(product)}>
-//         הוסף לסל
-//       </button>
-//     </div>
-//   );
-// };
+  const isOutOfStock = currentStock <= 0;
 
-// export default ProductCard;
-import React from 'react';
+  const handleDelete = async () => {
+    if (window.confirm(`האם אתה בטוח שברצונך למחוק את "${product.ProductName || product.name}"?`)) {
+      setIsUpdating(true);
+      try {
+        await deleteProduct(product.id || product.ProductID);
+        
+        // שלב האנימציה:
+        setIsFadingOut(true); // מפעיל את ה-CSS של ההיעלמות
+        
+        // מחכים שהאנימציה תסתיים (500ms) לפני שמוחקים מה-State הכללי
+        setTimeout(() => {
+          if (onDeleted) {
+            onDeleted(product.id || product.ProductID);
+          }
+        }, 500);
 
-const ProductCard = ({ product, onAddToCart }) => {
-  // בדיקה האם המוצר במלאי
-  const isOutOfStock = product.stock_qty <= 0;
+      } catch (err) {
+        alert("שגיאה במחיקה: " + err.message);
+        setIsUpdating(false);
+      }
+    }
+  };
 
   return (
-    <div className={`product-card ${isOutOfStock ? 'out-of-stock' : ''}`}>
+    <div className={`product-card ${isOutOfStock ? 'out-of-stock' : ''} ${isFadingOut ? 'fade-out' : ''}`}>
       <div className="product-info">
-        <h3>{product.ProductName}</h3> 
-        <p className="price">₪{product.original_price}</p>
-        <p className={`stock ${isOutOfStock ? 'no-stock' : ''}`}>
-          {isOutOfStock ? 'אזל מהמלאי' : `במלאי: ${product.stock_qty}`}
-        </p>
-        <small className="category-tag">{product.CategoryName}</small>
+        <h3>{product.ProductName || product.name}</h3> 
+        <p className="price">₪{product.original_price || product.price}</p>
+        
+        <div className="stock-status-area">
+          {isAdmin ? (
+            <div className="admin-view">
+              <p className="admin-stock-label">מלאי: <strong>{currentStock}</strong></p>
+              <div className="admin-stock-controls">
+                <button onClick={() => !isUpdating && setCurrentStock(s => s + 1)}>+</button>
+                <button onClick={() => !isUpdating && currentStock > 0 && setCurrentStock(s => s - 1)}>-</button>
+              </div>
+            </div>
+          ) : (
+            isOutOfStock && <p className="out-of-stock-msg">אזל מהמלאי</p>
+          )}
+        </div>
       </div>
       
-      <button 
-        className="add-to-cart" 
-        onClick={() => !isOutOfStock && onAddToCart(product)}
-        disabled={isOutOfStock}
-      >
-        {isOutOfStock ? 'לא זמין' : 'הוסף לסל'}
-      </button>
+      {isAdmin ? (
+        <button className="delete-action-btn" onClick={handleDelete} disabled={isUpdating}>
+          {isUpdating ? 'מוחק...' : '🗑️ מחק מוצר'}
+        </button>
+      ) : (
+        <button 
+          className="add-to-cart" 
+          onClick={() => onAddToCart({...product, stock_qty: currentStock})}
+          disabled={isOutOfStock}
+        >
+          {isOutOfStock ? 'לא זמין' : 'הוסף לסל'}
+        </button>
+      )}
     </div>
   );
 };

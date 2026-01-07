@@ -12,28 +12,61 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [isCheckout, setIsCheckout] = useState(false);
 
-  // ניהול מצב משתמש
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  // טעינת סל מה-LocalStorage
+  const [admin, setAdmin] = useState(() => {
+    const savedAdmin = localStorage.getItem('admin_user');
+    return savedAdmin ? JSON.parse(savedAdmin) : null;
+  });
+
   const [cartItems, setCartItems] = useState(() => {
     const savedCart = localStorage.getItem('smart_shop_cart');
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
-  // --- תיקון: ריקון הסל בעת שינוי משתמש (התחברות או התנתקות) ---
-  const handleUserChange = (userData) => {
-    setUser(userData);
-    
-    // כאשר המשתמש משתנה, אנו מרוקנים את הסל גם ב-State וגם ב-LocalStorage
-    setCartItems([]);
-    localStorage.removeItem('smart_shop_cart');
+  // פונקציה לרענון הנתונים מהשרת (שימוש כללי)
+  const refreshData = async () => {
+    try {
+      const data = await getAllCategoriesWithProducts();
+      setAllData(data || []);
+      if (selectedCategory === 'all') {
+        setFilteredProducts(data || []);
+      } else {
+        setFilteredProducts(data.filter(item => item.CategoryName === selectedCategory));
+      }
+    } catch (err) {
+      console.error("Error refreshing data:", err);
+    }
   };
 
-  // שמירה ל-LocalStorage בכל שינוי בסל
+  // --- פונקציה חדשה: הסרת מוצר מהתצוגה מיד לאחר מחיקה לוגית ---
+  const handleProductDeleted = (productId) => {
+    const updateList = (prevList) => 
+      prevList.filter(item => (item.ProductID || item.id) !== productId);
+
+    setAllData(prev => updateList(prev));
+    setFilteredProducts(prev => updateList(prev));
+  };
+
+  const handleUserChange = (userData) => {
+    setUser(userData);
+    setCartItems([]);
+    localStorage.removeItem('smart_shop_cart');
+    if (!userData) localStorage.removeItem('user');
+  };
+
+  const handleAdminChange = (adminData) => {
+    setAdmin(adminData);
+    if (!adminData) {
+      localStorage.removeItem('admin_user');
+    } else {
+      localStorage.setItem('admin_user', JSON.stringify(adminData));
+    }
+  };
+
   useEffect(() => {
     if (cartItems.length > 0) {
       localStorage.setItem('smart_shop_cart', JSON.stringify(cartItems));
@@ -42,16 +75,11 @@ function App() {
     }
   }, [cartItems]);
 
-  // טעינת מוצרים מהשרת
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
-        const data = await getAllCategoriesWithProducts();
-        setAllData(data || []);
-        setFilteredProducts(data || []);
-      } catch (err) {
-        console.error("Error loading data:", err);
+        await refreshData();
       } finally {
         setLoading(false);
       }
@@ -59,24 +87,19 @@ function App() {
     loadData();
   }, []);
 
-  // הוספה לסל עם בדיקת מלאי
   const addToCart = (product) => {
     const pId = product.ProductID || product.id;
     const pName = product.ProductName || product.name;
     const pPrice = product.original_price || product.price;
     const stockAvailable = product.stock_qty;
-
     if (!pId) return;
-
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.id === pId);
       const currentQty = existingItem ? existingItem.quantity : 0;
-
       if (currentQty + 1 > stockAvailable) {
         alert(`לא ניתן להוסיף יותר מ-${stockAvailable} יחידות ממוצר זה`);
         return prevItems;
       }
-
       if (existingItem) {
         return prevItems.map(item =>
           item.id === pId ? { ...item, quantity: item.quantity + 1 } : item
@@ -118,9 +141,17 @@ function App() {
             setCartItems={setCartItems}
             onGoToCheckout={() => setIsCheckout(true)}
             user={user} 
-            onUserChange={handleUserChange} 
+            onUserChange={handleUserChange}
+            admin={admin}               
+            onAdminChange={handleAdminChange}
+            onRefresh={refreshData}
           />
-          <MainContent products={filteredProducts} onAddToCart={addToCart} />
+          <MainContent 
+            products={filteredProducts} 
+            onAddToCart={addToCart} 
+            admin={admin} 
+            onProductDeleted={handleProductDeleted} // מעבירים את הפונקציה ל-MainContent
+          />
         </>
       )}
     </div>

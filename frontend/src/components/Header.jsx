@@ -4,6 +4,8 @@ import Cart from './Cart';
 import SignIn from './SignIn';
 import SignUp from './SignUp';
 import UserProfile from './UserProfile';
+import AdminLogin from './AdminLogin'; 
+import AddProductModal from './AddProductModal'; // ייבוא המודאל החדש
 import '../styles/Header.css';
 
 const Header = ({ 
@@ -14,21 +16,42 @@ const Header = ({
   setCartItems, 
   onGoToCheckout,
   user,           
-  onUserChange    
+  onUserChange,
+  admin,         
+  onAdminChange,
+  onRefresh     // פונקציית רענון מה-App
 }) => {
   const [showCart, setShowCart] = useState(false);
-  
-  // מצבים לניהול פתיחת המודאלים
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
+  
+  // מצב חדש למודאל הוספת מוצר
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [logoClicks, setLogoClicks] = useState(0);
 
-  // פונקציית התנתקות - מנקה זיכרון ומפעילה את הריקון ב-App
   const handleLogout = () => {
     localStorage.removeItem('user');
-    // הפונקציה ב-App תנקה עכשיו גם את ה-localStorage של הסל וגם את ה-State
     onUserChange(null); 
     alert("התנתקת מהמערכת, הסל רוקן.");
+  };
+
+  const handleAdminLogout = () => {
+    onAdminChange(null);
+    alert("יצאת ממערכת הניהול.");
+  };
+
+  const handleLogoClick = () => {
+    setLogoClicks(prev => {
+      const newCount = prev + 1;
+      if (newCount === 5) {
+        setIsAdminLoginOpen(true);
+        return 0;
+      }
+      return newCount;
+    });
+    setTimeout(() => setLogoClicks(0), 3000);
   };
 
   const totalItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -36,22 +59,30 @@ const Header = ({
   return (
     <>
       <header className="app-header">
-        {/* צד שמאל: סל קניות */}
         <button className="cart-toggle-btn" onClick={() => setShowCart(true)}>
           <span className="cart-icon">🛒</span>
           {totalItemsCount > 0 && <span className="cart-count">{totalItemsCount}</span>}
         </button>
 
-        {/* צד ימין: ניווט משתמש */}
         <div className="auth-nav">
-          {user ? (
+          {admin ? (
+            <div className="admin-logged-in">
+              {/* כפתור הוספת מוצר חדש - למנהל בלבד */}
+              <button className="auth-btn add-product-btn" onClick={() => setIsAddProductOpen(true)}>
+                ➕ הוסף מוצר
+              </button>
+              
+              <button className="auth-btn admin-panel-btn" onClick={() => window.location.href='/admin-dashboard'}>
+                🛠 לוח בקרה
+              </button>
+              <button className="logout-btn" onClick={handleAdminLogout}>יציאה</button>
+            </div>
+          ) : user ? (
             <div className="user-logged-in">
               <button className="user-welcome-btn" onClick={() => setIsProfileOpen(true)}>
                  👤 שלום, {user.username}
               </button>
-              <button className="logout-btn" onClick={handleLogout}>
-                התנתק
-              </button>
+              <button className="logout-btn" onClick={handleLogout}>התנתק</button>
             </div>
           ) : (
             <div className="auth-buttons">
@@ -61,7 +92,6 @@ const Header = ({
           )}
         </div>
 
-        {/* מרכז: קטגוריות */}
         <CategoryButtons 
           categories={categories} 
           onSelectCategory={onSelectCategory}
@@ -69,43 +99,30 @@ const Header = ({
         />
 
         <div className="logo">
-          <h1>Smart Shop</h1>
+          <h1 onClick={handleLogoClick} style={{ cursor: 'default', userSelect: 'none' }}>Smart Shop</h1>
         </div>
       </header>
 
-      {/* מודאלים */}
-      <SignIn 
-        isOpen={isLoginOpen} 
-        onClose={() => setIsLoginOpen(false)} 
-        onUserChange={onUserChange}
-        onSwitch={() => { setIsLoginOpen(false); setIsSignupOpen(true); }} 
+      {/* מודאלים קיימים */}
+      <SignIn isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} onUserChange={onUserChange} onSwitch={() => { setIsLoginOpen(false); setIsSignupOpen(true); }} />
+      <SignUp isOpen={isSignupOpen} onClose={() => setIsSignupOpen(false)} onSwitch={() => { setIsSignupOpen(false); setIsLoginOpen(true); }} />
+      <UserProfile user={user} isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
+      <AdminLogin isOpen={isAdminLoginOpen} onClose={() => setIsAdminLoginOpen(false)} onAdminChange={onAdminChange} />
+
+      {/* מודאל הוספת מוצר חדש */}
+      <AddProductModal 
+        isOpen={isAddProductOpen} 
+        onClose={() => setIsAddProductOpen(false)} 
+        categories={categories} 
+        onRefresh={onRefresh} 
       />
 
-      <SignUp 
-        isOpen={isSignupOpen} 
-        onClose={() => setIsSignupOpen(false)} 
-        onSwitch={() => { setIsSignupOpen(false); setIsLoginOpen(true); }} 
-      />
-
-      <UserProfile 
-        user={user} 
-        isOpen={isProfileOpen} 
-        onClose={() => setIsProfileOpen(false)} 
-      />
-
-      {/* מגירת עגלת קניות */}
+      {/* סל קניות */}
       {showCart && (
         <div className="cart-overlay" onClick={() => setShowCart(false)}>
           <div className="cart-drawer" onClick={(e) => e.stopPropagation()}>
             <button className="close-cart" onClick={() => setShowCart(false)}>&times;</button>
-            <Cart 
-              cartItems={cartItems} 
-              setCartItems={setCartItems} 
-              onStartCheckout={() => {
-                setShowCart(false);
-                onGoToCheckout();
-              }} 
-            />
+            <Cart cartItems={cartItems} setCartItems={setCartItems} onStartCheckout={() => { setShowCart(false); onGoToCheckout(); }} />
           </div>
         </div>
       )}
