@@ -9,13 +9,15 @@ const CartItem = ({ item, onIncrease, onDecrease, onRemove }) => {
           <p>₪{item.price}</p>
         </div>
       </div>
-      <div className="cart-item-actions">
+      <div className="cart-item-actions" style={{display: 'flex', alignItems: 'center'}}>
         <div className="quantity-controls">
           <button onClick={() => onDecrease(item.id)}>-</button>
           <span>{item.quantity}</span>
           <button onClick={() => onIncrease(item.id)}>+</button>
         </div>
-        <button className="remove-btn" onClick={() => onRemove(item.id)}>🗑️</button>
+        <button className="remove-btn" onClick={() => onRemove(item.id)} title="הסר מוצר">
+          🗑️
+        </button>
       </div>
     </div>
   );

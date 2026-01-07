@@ -1,84 +1,191 @@
-.cart-container {
-  max-width: 500px;
-  margin: 20px auto;
-  padding: 20px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+/* מבנה כללי של עגלת הקניות */
+.cart-main-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* התאמה לגובה ה-Drawer */
+  background-color: #ffffff;
+  overflow: hidden; /* מניעת גלילה כפולה */
 }
 
+.cart-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* כותרת עגלת הקניות */
+.cart-container h2 {
+  padding: 20px;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border-bottom: 1px solid #edf2f7;
+  flex-shrink: 0; /* מניעת כיווץ הכותרת */
+  background: white;
+  text-align: right;
+}
+
+/* רשימת המוצרים בעגלה */
+.cart-items-list {
+  flex-grow: 1; /* תפיסת כל השטח הפנוי */
+  overflow-y: auto; /* גלילה אנכית */
+  padding: 10px 20px;
+  background-color: #f8fafc;
+  min-height: 0; /* פתרון לבעיית גלילה ב-Flexbox */
+}
+
+/* פריט בודד בעגלה */
 .cart-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 0;
-  border-bottom: 1px solid #eee;
+  padding: 16px 0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .cart-item-info {
+  text-align: right;
+  flex: 1;
+}
+
+.cart-item-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 1.1rem;
+  color: #2d3748;
+}
+
+.cart-item-info p {
+  margin: 0;
+  color: #38a169;
+  font-weight: 600;
+}
+
+/* פעולות לפריט (הוספה/הסרה) */
+.cart-item-actions {
   display: flex;
   align-items: center;
   gap: 15px;
 }
 
-.cart-item-info img {
-  width: 50px;
-  height: 50px;
-  border-radius: 8px;
-  object-fit: cover;
-}
-
 .quantity-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: #f4f4f4;
-  padding: 5px 10px;
-  border-radius: 20px;
+  gap: 12px;
+  background: white;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .quantity-controls button {
   border: none;
   background: none;
-  font-size: 18px;
+  font-size: 1.2rem;
+  color: #3182ce;
   cursor: pointer;
-  color: #007bff;
+  padding: 0 5px;
 }
 
 .remove-btn {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px;
-  margin-right: 15px;
+  font-size: 1.2rem;
+  color: #a0aec0;
+  transition: color 0.2s;
 }
 
+.remove-btn:hover {
+  color: #e53e3e;
+}
+
+/* פוטר - האזור הקבוע בתחתית */
+.cart-footer {
+  padding: 20px;
+  border-top: 1px solid #eee;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* סיכום העגלה (סך הכל ותיבת התשלום) */
 .cart-summary {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 2px solid #333;
+  flex-shrink: 0; /* מניעת כיווץ האזור */
+  padding: 20px;
+  background: white;
+  border-top: 2px solid #2d3748;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .total-row {
   display: flex;
   justify-content: space-between;
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 20px;
+  align-items: center;
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+  font-weight: 800;
 }
 
+.total-price {
+  color: #2f855a;
+}
+
+/* כפתור תשלום (ירוק) */
 .checkout-btn {
   width: 100%;
-  padding: 15px;
-  background: #28a745;
+  padding: 14px;
+  background-color: #38a169;
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 18px;
+  font-size: 1.1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: 0.2s;
+  transition: background 0.2s;
 }
 
 .checkout-btn:hover {
-  background: #218838;
+  background-color: #2f855a;
+}
+
+/* כפתור ריקון סל (אדום/לבן) */
+.clear-cart-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: transparent;
+  color: #e74c3c;
+  border: 1px solid #fab1a0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.clear-cart-btn:hover {
+  background-color: #fff5f5;
+  border-color: #e74c3c;
+}
+
+.trash-icon {
+  font-size: 1.1rem;
+}
+
+/* הודעת סל ריק */
+.empty-cart-container {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.empty-msg {
+  color: #888;
+  font-size: 1.1rem;
 }

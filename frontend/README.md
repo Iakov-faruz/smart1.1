@@ -14,3 +14,22 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+$srcPath = "C:\Users\5722y\Desktop\smart\SmartExpEnterprise\backend\routes"
+$downloads = [Environment]::GetFolderPath("UserProfile") + "\Downloads"
+
+# עבור כל תיקייה בתוך src
+Get-ChildItem -Directory $srcPath | ForEach-Object {
+    $folderName = $_.Name
+    $outputFile = Join-Path $downloads "$folderName.txt"
+
+    # כותב את שם התיקייה
+    "===== Folder: $folderName =====" | Out-File $outputFile -Encoding utf8
+
+    # עובר על כל הקבצים שבתוכה ומוסיף את התוכן שלהם
+    Get-ChildItem -Recurse $_.FullName -File | ForEach-Object {
+        "----- File: $($_.FullName) -----" | Out-File $outputFile -Append -Encoding utf8
+        Get-Content $_.FullName | Out-File $outputFile -Append -Encoding utf8
+        "`n" | Out-File $outputFile -Append -Encoding utf8
+    }
+}

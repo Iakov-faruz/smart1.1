@@ -1,0 +1,68 @@
+.user-profile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.user-profile-card {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    width: 350px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    text-align: right;
+    direction: rtl;
+}
+
+.close-profile {
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    font-size: 25px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.profile-avatar {
+    font-size: 50px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.info-item {
+    margin: 15px 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.info-item label {
+    font-weight: bold;
+    display: block;
+    color: #555;
+}
+
+.points-badge {
+    color: #f39c12;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.close-btn {
+    width: 100%;
+    padding: 10px;
+    background: #2c3e50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    margin-top: 20px;
+    cursor: pointer;
+}
