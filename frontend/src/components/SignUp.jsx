@@ -7,24 +7,27 @@ const SignUp = ({ isOpen, onClose, onSwitch }) => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [popup, setPopup] = useState({ show: false, message: '', type: 'success' });
 
-  // פונקציית בדיקה (Client-side Validation)
   const validate = (data) => {
     const errors = {};
-    const [username, email, password] = data;
+    const [username, email, password, phone, city, address] = data;
 
-    // וולידציה לשם משתמש (עברית/אנגלית/מספרים)
-    if (!/^[a-zA-Z0-9א-ת]+$/.test(username)) {
-      errors[0] = "שם משתמש: אותיות ומספרים בלבד ללא תווים מיוחדים";
+    if (!/^[a-zA-Z0-9א-ת\s]+$/.test(username)) {
+      errors[0] = "שם משתמש: אותיות ומספרים בלבד";
     }
-
-    // וולידציה למייל
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errors[1] = "נא להזין כתובת אימייל תקינה";
     }
-
-    // וולידציה לסיסמה (5 תווים, גדולה וקטנה)
     if (!/^(?=.*[a-z])(?=.*[A-Z]).{5,}$/.test(password)) {
-      errors[2] = "הסיסמה חייבת לכלול לפחות 5 תווים, אות גדולה ואות קטנה";
+      errors[2] = "סיסמה: לפחות 5 תווים, אות גדולה וקטנה";
+    }
+    if (!/^[0-9-]{9,11}$/.test(phone)) {
+      errors[3] = "נא להזין מספר טלפון תקין";
+    }
+    if (!city || city.trim().length < 2) {
+      errors[4] = "נא להזין שם עיר";
+    }
+    if (!address || address.trim().length < 3) {
+      errors[5] = "נא להזין כתובת מלאה";
     }
 
     setFieldErrors(errors);
@@ -32,30 +35,28 @@ const SignUp = ({ isOpen, onClose, onSwitch }) => {
   };
 
   const handleSignUpSubmit = async (formData) => {
-    // 1. נקה שגיאות קודמות ובצע בדיקה
     setFieldErrors({});
     if (!validate(formData)) return;
 
     try {
-      // 2. שליחה לשרת
       await createCustomer({
         username: formData[0],
         email: formData[1],
-        password_hash: formData[2]
+        password_hash: formData[2],
+        phone: formData[3],
+        city: formData[4],
+        address: formData[5]
       });
 
-      // 3. הצלחה - הצגת פופאפ ואיפוס שגיאות
       setPopup({
         show: true,
-        message: 'החשבון נוצר בהצלחה! ברוכים הבאים.',
+        message: 'החשבון נוצר בהצלחה!',
         type: 'success'
       });
     } catch (error) {
-      // 4. טיפול בשגיאות שחזרו מהשרת (כמו "מייל תפוס")
-      const serverError = error.response?.data?.error || 'שגיאה בתקשורת עם השרת';
       setPopup({
         show: true,
-        message: serverError,
+        message: error.response?.data?.error || 'שגיאה ברישום',
         type: 'error'
       });
     }
@@ -70,16 +71,18 @@ const SignUp = ({ isOpen, onClose, onSwitch }) => {
         onSubmit={handleSignUpSubmit}
         mode="signup"
         title="הרשמה"
-        subtitle="הצטרפו לקהילת הלקוחות שלנו"
+        subtitle="הצטרפו לקהילה שלנו"
         submitText="צור חשבון"
         themeClass="signup-theme"
         fields={[
           { type: 'text', placeholder: 'שם משתמש', required: true, error: fieldErrors[0] },
           { type: 'email', placeholder: 'אימייל', required: true, error: fieldErrors[1] },
-          { type: 'password', placeholder: 'סיסמה', required: true, error: fieldErrors[2] }
+          { type: 'password', placeholder: 'סיסמה', required: true, error: fieldErrors[2] },
+          { type: 'text', placeholder: 'טלפון', required: true, error: fieldErrors[3] },
+          { type: 'text', placeholder: 'עיר', required: true, error: fieldErrors[4] },
+          { type: 'text', placeholder: 'כתובת', required: true, error: fieldErrors[5] }
         ]}
       />
-
       <StatusPopup 
         isOpen={popup.show} 
         message={popup.message} 

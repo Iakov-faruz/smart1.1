@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { sql, poolPromise } = require('../db_connection.js'); // וודא שהנתיב לקובץ ה-DB נכון
+const { sql, poolPromise } = require('../db_connection.js');
 
 router.post('/login', async (req, res, next) => {
     const { username, password } = req.body;
@@ -12,11 +12,11 @@ router.post('/login', async (req, res, next) => {
     try {
         const pool = await poolPromise;
         
-        // שליפת המשתמש לפי שם משתמש
+        // --- עדכון השאילתה: הוספת השדות החדשים לשליפה ---
         const result = await pool.request()
             .input('username', sql.NVarChar, username)
             .query(`
-                SELECT [id], [username], [password_hash], [email], [loyalty_points]
+                SELECT [id], [username], [password_hash], [email], [loyalty_points], [phone], [city], [address]
                 FROM [CUSTOMERS]
                 WHERE [username] = @username
             `);
@@ -28,14 +28,12 @@ router.post('/login', async (req, res, next) => {
             return res.status(401).json({ error: 'שם משתמש או סיסמה שגויים' });
         }
 
-        // 2. בדיקת סיסמה 
-        // הערה: אם השתמשת ב-bcrypt ב-SignUp, צריך להשתמש ב-bcrypt.compare כאן.
-        // כרגע אני משווה טקסט פשוט כפי שביקשת במבנה הבסיסי:
+        // 2. בדיקת סיסמה (השוואה ישירה כפי שהגדרת)
         if (user.password_hash !== password) {
             return res.status(401).json({ error: 'שם משתמש או סיסמה שגויים' });
         }
 
-        // 3. הצלחה - החזרת פרטי המשתמש (ללא הסיסמה מטעמי אבטחה)
+        // 3. הצלחה - החזרת פרטי המשתמש המלאים (ללא הסיסמה)
         const { password_hash, ...userWithoutPassword } = user;
         
         res.status(200).json({
@@ -44,6 +42,7 @@ router.post('/login', async (req, res, next) => {
         });
 
     } catch (err) {
+        console.error("Login Error:", err.message);
         next(err);
     }
 });

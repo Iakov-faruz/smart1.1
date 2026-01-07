@@ -3,15 +3,16 @@ const router = express.Router();
 const { sql, poolPromise } = require('../db_connection.js');
 
 router.post('/create_customer', async (req, res, next) => {
-    const { username, password_hash, email } = req.body;
+    // שליפת כל השדות החדשים מה-body
+    const { username, password_hash, email, phone, city, address } = req.body;
 
-    // 1. וולידציה בסיסית - האם השדות קיימים
-    if (!username || !password_hash || !email) {
-        return res.status(400).json({ error: 'כל השדות הם חובה' });
+    // 1. וולידציה בסיסית - האם כל השדות החיוניים קיימים
+    if (!username || !password_hash || !email || !phone || !city || !address) {
+        return res.status(400).json({ error: 'כל השדות (שם משתמש, סיסמה, אימייל, טלפון, עיר וכתובת) הם חובה' });
     }
 
     // 2. בדיקת שם משתמש - תמיכה בעברית, אנגלית ומספרים בלבד
-    const usernameRegex = /^[a-zA-Z0-9א-ת]+$/;
+    const usernameRegex = /^[a-zA-Z0-9א-ת\s]+$/; // הוספתי \s למקרה שיש רווח בשם
     if (!usernameRegex.test(username)) {
         return res.status(400).json({ error: 'שם משתמש יכול להכיל אותיות (עברית/אנגלית) ומספרים בלבד' });
     }
@@ -19,7 +20,7 @@ router.post('/create_customer', async (req, res, next) => {
     // 3. בדיקת סיסמה - לפחות 5 תווים, אות גדולה ואות קטנה (באנגלית)
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z]).{5,}$/;
     if (!passwordRegex.test(password_hash)) {
-        return res.status(400).json({ error: 'הסיסמה חייבת לכלול לפחות 5 תווים, אות גדולה ואות קטנה' });
+        return res.status(400).json({ error: 'הסיסמה חייבת לכלול לפחות 5 תווים, אות גדולה ואות קטנה באנגלית' });
     }
 
     try {
@@ -41,19 +42,23 @@ router.post('/create_customer', async (req, res, next) => {
             return res.status(400).json({ error: errorMsg });
         }
 
-        // 5. יצירת הלקוח - שימוש ב-Input להגנה מ-SQL Injection
+        // 5. יצירת הלקוח - הוספת השדות החדשים לשאילתה
         await pool.request()
             .input('username', sql.NVarChar, username)
             .input('password_hash', sql.NVarChar, password_hash)
             .input('email', sql.NVarChar, email)
+            .input('phone', sql.NVarChar, phone)
+            .input('city', sql.NVarChar, city)
+            .input('address', sql.NVarChar, address)
             .query(`
-                INSERT INTO [CUSTOMERS] (username, password_hash, email, loyalty_points) 
-                VALUES (@username, @password_hash, @email, 0)
+                INSERT INTO [CUSTOMERS] (username, password_hash, email, phone, city, address, loyalty_points) 
+                VALUES (@username, @password_hash, @email, @phone, @city, @address, 0)
             `);
 
         res.status(201).json({ message: 'החשבון נוצר בהצלחה!' });
     } catch (err) {
-        next(err); // העברה לטיפול שגיאות גלובלי
+        console.error("Error creating customer:", err);
+        next(err); 
     }
 });
 

@@ -13,8 +13,8 @@ const Header = ({
   cartItems, 
   setCartItems, 
   onGoToCheckout,
-  user,           // מקבל מה-App לטובת רינדור דינמי
-  onUserChange    // פונקציה לעדכון ה-State ב-App
+  user,           
+  onUserChange    
 }) => {
   const [showCart, setShowCart] = useState(false);
   
@@ -23,10 +23,12 @@ const Header = ({
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  // פונקציית התנתקות - מנקה זיכרון ומעדכנת State ללא רענון דף
+  // פונקציית התנתקות - מנקה זיכרון ומפעילה את הריקון ב-App
   const handleLogout = () => {
     localStorage.removeItem('user');
+    // הפונקציה ב-App תנקה עכשיו גם את ה-localStorage של הסל וגם את ה-State
     onUserChange(null); 
+    alert("התנתקת מהמערכת, הסל רוקן.");
   };
 
   const totalItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -34,21 +36,19 @@ const Header = ({
   return (
     <>
       <header className="app-header">
-        {/* צד שמאל: סל קניות עם מונה פריטים */}
+        {/* צד שמאל: סל קניות */}
         <button className="cart-toggle-btn" onClick={() => setShowCart(true)}>
           <span className="cart-icon">🛒</span>
           {totalItemsCount > 0 && <span className="cart-count">{totalItemsCount}</span>}
         </button>
 
-        {/* צד ימין: ניווט משתמש (התחברות/פרופיל) */}
+        {/* צד ימין: ניווט משתמש */}
         <div className="auth-nav">
           {user ? (
             <div className="user-logged-in">
-              {/* שם משתמש בעיצוב טקסט גדול - לחיצה פותחת פרופיל */}
               <button className="user-welcome-btn" onClick={() => setIsProfileOpen(true)}>
                  👤 שלום, {user.username}
               </button>
-              {/* כפתור התנתקות בעיצוב של כפתורי האימות */}
               <button className="logout-btn" onClick={handleLogout}>
                 התנתק
               </button>
@@ -61,20 +61,19 @@ const Header = ({
           )}
         </div>
 
-        {/* מרכז: כפתורי קטגוריות */}
+        {/* מרכז: קטגוריות */}
         <CategoryButtons 
           categories={categories} 
           onSelectCategory={onSelectCategory}
           selectedCategory={selectedCategory}
         />
 
-        {/* לוגו החנות */}
         <div className="logo">
           <h1>Smart Shop</h1>
         </div>
       </header>
 
-      {/* רכיבי מודאל (צפים מעל הדף) */}
+      {/* מודאלים */}
       <SignIn 
         isOpen={isLoginOpen} 
         onClose={() => setIsLoginOpen(false)} 

@@ -15,24 +15,25 @@ router.post('/create_order', async (req, res, next) => {
         await transaction.begin();
 
         try {
-            // 1. יצירת רשומת הזמנה - תמיכה ב-NULL עבור אורחים
+            // 1. יצירת רשומת הזמנה - שמות עמודות מעודכנים לפי ה-SELECT שלך
             const orderResult = await transaction.request()
-                // טיפול מפורש ב-NULL: אם customerId לא קיים, מזריקים null
                 .input('customerId', sql.Int, customerId ? customerId : null) 
                 .input('address', sql.NVarChar, customerInfo.address)
+                .input('city', sql.NVarChar, customerInfo.city)
+                .input('phone', sql.NVarChar, customerInfo.phone)
                 .input('total', sql.Decimal(10, 2), totalPrice)
                 .query(`
-                    INSERT INTO [ORDERS] (customer_id, shipping_address, total_amount, order_date)
+                    INSERT INTO [ORDERS] (customer_id, shipping_address, total_amount, order_date, phone, city)
                     OUTPUT INSERTED.id
-                    VALUES (@customerId, @address, @total, GETDATE())
+                    VALUES (@customerId, @address, @total, GETDATE(), @phone, @city)
                 `);
 
             const orderId = orderResult.recordset[0].id;
 
-            // 2. לולאת עדכון מוצרים, מלאי ועסקאות
+            // 2. לולאת עדכון מוצרים ומלאי
             for (const item of items) {
                 
-                // א. פירוט הזמנה
+                // א. פירוט הזמנה - שימוש ב-unit_price כפי שמופיע בטבלה שלך
                 await transaction.request()
                     .input('orderId', sql.Int, orderId)
                     .input('productId', sql.Int, item.id)
@@ -43,7 +44,7 @@ router.post('/create_order', async (req, res, next) => {
                         VALUES (@orderId, @productId, @qty, @unitPrice)
                     `);
 
-                // ב. תיעוד עסקה - תמיכה ב-NULL עבור אורחים
+                // ב. תיעוד עסקה - טבלת TRANSACTIONS
                 await transaction.request()
                     .input('pId', sql.Int, item.id)
                     .input('cId', sql.Int, customerId ? customerId : null)
@@ -54,7 +55,7 @@ router.post('/create_order', async (req, res, next) => {
                         VALUES (@pId, @cId, @qty, @fPrice, GETDATE())
                     `);
 
-                // ג. עדכון מלאי
+                // ג. עדכון מלאי - וידוא שימוש ב-stock_qty
                 const updateStock = await transaction.request()
                     .input('productId', sql.Int, item.id)
                     .input('deductQty', sql.Int, item.quantity)
@@ -65,7 +66,7 @@ router.post('/create_order', async (req, res, next) => {
                     `);
 
                 if (updateStock.rowsAffected[0] === 0) {
-                    throw new Error(`אין מספיק מלאי עבור מוצר ${item.id}`);
+                    throw new Error(`אין מספיק מלאי עבור מוצר מזהה ${item.id}`);
                 }
             }
 
@@ -73,7 +74,7 @@ router.post('/create_order', async (req, res, next) => {
             res.status(201).json({ message: 'הזמנה בוצעה בהצלחה', orderId });
 
         } catch (err) {
-            await transaction.rollback();
+            if (transaction) await transaction.rollback();
             throw err;
         }
 
