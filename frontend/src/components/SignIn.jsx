@@ -64,11 +64,11 @@
 //       />
 
 //       {/* ה-Popup של הסטטוס */}
-//       <StatusPopup 
-//         isOpen={popup.show} 
-//         message={popup.message} 
-//         type={popup.type} 
-//         onClose={handleClosePopup} 
+//       <StatusPopup
+//         isOpen={popup.show}
+//         message={popup.message}
+//         type={popup.type}
+//         onClose={handleClosePopup}
 //       />
 //     </>
 //   );
