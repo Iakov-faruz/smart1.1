@@ -81,7 +81,7 @@ function App() {
     loadData();
   }, []);
 
-  // פונקציית הוספה לסל מעודכנת התומכת בכמויות
+  // פונקציית הוספה לסל המקבלת כמות [cite: 504-506]
   const addToCart = (product, quantity = 1) => {
     const pId = product.ProductID || product.id;
     const pName = product.ProductName || product.name;
@@ -92,11 +92,11 @@ function App() {
 
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.id === pId);
-      const currentInCart = existingItem ? existingItem.quantity : 0;
+      const currentQtyInCart = existingItem ? existingItem.quantity : 0;
       
-      // בדיקת מלאי כוללת
-      if (currentInCart + quantity > stockAvailable) {
-        alert(`לא ניתן להוסיף ${quantity} יחידות. המלאי המקסימלי הוא ${stockAvailable} (כבר יש ${currentInCart} בסל)`);
+      // בדיקה האם סך הכמות המבוקשת חורגת מהמלאי
+      if (currentQtyInCart + quantity > stockAvailable) {
+        alert(`מלאי מוגבל: ניתן להוסיף עוד ${stockAvailable - currentQtyInCart} יחידות בלבד (כבר יש ${currentQtyInCart} בסל).`);
         return prevItems;
       }
 
