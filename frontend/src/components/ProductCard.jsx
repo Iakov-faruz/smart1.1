@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { updateProductStock } from '../api/update_product_qty'; 
+import { updateProductStock } from '../api/update_product_qty';
 import { deleteProduct } from '../api/delete_product'; 
 import '../styles/ProductCard.css';
 
 const ProductCard = ({ product, onAddToCart, isAdmin, onDeleted }) => {
   const [currentStock, setCurrentStock] = useState(product.stock_qty);
+  const [qtyToAdd, setQtyToAdd] = useState(1); // כמות לבחירה לפני הוספה לסל
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isFadingOut, setIsFadingOut] = useState(false); // סטייט לאנימציה
+  const [isFadingOut, setIsFadingOut] = useState(false);
 
   const isOutOfStock = currentStock <= 0;
 
@@ -15,22 +16,26 @@ const ProductCard = ({ product, onAddToCart, isAdmin, onDeleted }) => {
       setIsUpdating(true);
       try {
         await deleteProduct(product.id || product.ProductID);
-        
-        // שלב האנימציה:
-        setIsFadingOut(true); // מפעיל את ה-CSS של ההיעלמות
-        
-        // מחכים שהאנימציה תסתיים (500ms) לפני שמוחקים מה-State הכללי
+        setIsFadingOut(true);
         setTimeout(() => {
           if (onDeleted) {
             onDeleted(product.id || product.ProductID);
           }
         }, 500);
-
       } catch (err) {
         alert("שגיאה במחיקה: " + err.message);
         setIsUpdating(false);
       }
     }
+  };
+
+  // פונקציות לבורר הכמויות
+  const increaseQty = () => {
+    if (qtyToAdd < currentStock) setQtyToAdd(prev => prev + 1);
+  };
+
+  const decreaseQty = () => {
+    if (qtyToAdd > 1) setQtyToAdd(prev => prev - 1);
   };
 
   return (
@@ -44,12 +49,22 @@ const ProductCard = ({ product, onAddToCart, isAdmin, onDeleted }) => {
             <div className="admin-view">
               <p className="admin-stock-label">מלאי: <strong>{currentStock}</strong></p>
               <div className="admin-stock-controls">
-                <button onClick={() => !isUpdating && setCurrentStock(s => s + 1)}>+</button>
-                <button onClick={() => !isUpdating && currentStock > 0 && setCurrentStock(s => s - 1)}>-</button>
+                <button className="stock-btn" onClick={() => !isUpdating && setCurrentStock(s => s + 1)}>+</button>
+                <button className="stock-btn" onClick={() => !isUpdating && currentStock > 0 && setCurrentStock(s => s - 1)}>-</button>
               </div>
             </div>
           ) : (
-            isOutOfStock && <p className="out-of-stock-msg">אזל מהמלאי</p>
+            <>
+              {isOutOfStock ? (
+                <p className="out-of-stock-msg">אזל מהמלאי</p>
+              ) : (
+                <div className="user-qty-selector">
+                  <button type="button" onClick={decreaseQty} disabled={qtyToAdd <= 1}>-</button>
+                  <span className="qty-display">{qtyToAdd}</span>
+                  <button type="button" onClick={increaseQty} disabled={qtyToAdd >= currentStock}>+</button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -61,10 +76,10 @@ const ProductCard = ({ product, onAddToCart, isAdmin, onDeleted }) => {
       ) : (
         <button 
           className="add-to-cart" 
-          onClick={() => onAddToCart({...product, stock_qty: currentStock})}
+          onClick={() => onAddToCart({...product, stock_qty: currentStock}, qtyToAdd)}
           disabled={isOutOfStock}
         >
-          {isOutOfStock ? 'לא זמין' : 'הוסף לסל'}
+          {isOutOfStock ? 'לא זמין' : `הוסף לסל (${qtyToAdd})`}
         </button>
       )}
     </div>

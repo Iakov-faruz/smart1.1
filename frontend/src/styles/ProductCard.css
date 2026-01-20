@@ -8,14 +8,58 @@
     flex-direction: column;
     justify-content: space-between;
     background: #fff;
-    transition: all 0.5s ease; /* האנימציה עוברת פה */
+    transition: all 0.5s ease;
 }
 
-/* אנימציית היעלמות */
 .product-card.fade-out {
     opacity: 0;
     transform: scale(0.8) translateY(20px);
     pointer-events: none;
+}
+
+/* בורר כמויות למשתמש */
+.user-qty-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 10px 0;
+    padding: 5px;
+    background: #f9f9f9;
+    border-radius: 25px;
+    border: 1px solid #eee;
+}
+
+.user-qty-selector button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background-color: #3498db;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.user-qty-selector button:hover:not(:disabled) {
+    background-color: #2980b9;
+}
+
+.user-qty-selector button:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.qty-display {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #2c3e50;
+    min-width: 25px;
+    text-align: center;
 }
 
 /* כפתורי הניהול (פלוס/מינוס) */
@@ -41,18 +85,14 @@
     color: white;
 }
 
-.stock-btn:hover { background: #34495e; }
-.stock-btn:disabled { background: #bdc3c7; }
-
-/* כפתור המחיקה התחתון (המעוגל שביקשת) */
 .delete-action-btn {
-    width: calc(100% + 30px); /* מפצה על ה-padding של הכרטיס */
-    margin: 0 -15px -15px -15px; /* נצמד לקצוות התחתונים */
+    width: calc(100% + 30px);
+    margin: 0 -15px -15px -15px;
     padding: 12px;
     background-color: #fff;
     color: #e74c3c;
     border: 1px solid #e74c3c;
-    border-radius: 0 0 8px 8px; /* עיגול תואם לכרטיס המקורי */
+    border-radius: 0 0 8px 8px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -67,7 +107,6 @@
     color: white;
 }
 
-/* כפתור הוספה לסל המקורי */
 .add-to-cart {
     width: calc(100% + 30px);
     margin: 0 -15px -15px -15px;
@@ -84,7 +123,6 @@
     background-color: #bdc3c7;
 }
 
-/* הודעות סטטוס */
 .out-of-stock-msg {
     color: #e74c3c;
     font-weight: bold;

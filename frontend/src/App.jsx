@@ -11,23 +11,19 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
   const [isCheckout, setIsCheckout] = useState(false);
-
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
-
   const [admin, setAdmin] = useState(() => {
     const savedAdmin = localStorage.getItem('admin_user');
     return savedAdmin ? JSON.parse(savedAdmin) : null;
   });
-
   const [cartItems, setCartItems] = useState(() => {
     const savedCart = localStorage.getItem('smart_shop_cart');
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
-  // פונקציה לרענון הנתונים מהשרת (שימוש כללי)
   const refreshData = async () => {
     try {
       const data = await getAllCategoriesWithProducts();
@@ -42,11 +38,9 @@ function App() {
     }
   };
 
-  // --- פונקציה חדשה: הסרת מוצר מהתצוגה מיד לאחר מחיקה לוגית ---
   const handleProductDeleted = (productId) => {
     const updateList = (prevList) => 
       prevList.filter(item => (item.ProductID || item.id) !== productId);
-
     setAllData(prev => updateList(prev));
     setFilteredProducts(prev => updateList(prev));
   };
@@ -87,25 +81,31 @@ function App() {
     loadData();
   }, []);
 
-  const addToCart = (product) => {
+  // פונקציית הוספה לסל מעודכנת התומכת בכמויות
+  const addToCart = (product, quantity = 1) => {
     const pId = product.ProductID || product.id;
     const pName = product.ProductName || product.name;
     const pPrice = product.original_price || product.price;
     const stockAvailable = product.stock_qty;
+    
     if (!pId) return;
+
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.id === pId);
-      const currentQty = existingItem ? existingItem.quantity : 0;
-      if (currentQty + 1 > stockAvailable) {
-        alert(`לא ניתן להוסיף יותר מ-${stockAvailable} יחידות ממוצר זה`);
+      const currentInCart = existingItem ? existingItem.quantity : 0;
+      
+      // בדיקת מלאי כוללת
+      if (currentInCart + quantity > stockAvailable) {
+        alert(`לא ניתן להוסיף ${quantity} יחידות. המלאי המקסימלי הוא ${stockAvailable} (כבר יש ${currentInCart} בסל)`);
         return prevItems;
       }
+
       if (existingItem) {
         return prevItems.map(item =>
-          item.id === pId ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === pId ? { ...item, quantity: item.quantity + quantity } : item
         );
       }
-      return [...prevItems, { id: pId, name: pName, price: pPrice, quantity: 1 }];
+      return [...prevItems, { id: pId, name: pName, price: pPrice, quantity: quantity }];
     });
   };
 
@@ -150,7 +150,7 @@ function App() {
             products={filteredProducts} 
             onAddToCart={addToCart} 
             admin={admin} 
-            onProductDeleted={handleProductDeleted} // מעבירים את הפונקציה ל-MainContent
+            onProductDeleted={handleProductDeleted} 
           />
         </>
       )}
