@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { sql, poolPromise } = require('../db_connection.js');
+const { sendOrderReceipt } = require('../services/email_service.js'); 
 
 router.post('/create_order', async (req, res, next) => {
     const { customerId, customerInfo, items, totalPrice } = req.body;
@@ -15,7 +16,6 @@ router.post('/create_order', async (req, res, next) => {
         await transaction.begin();
 
         try {
-            // 1. יצירת רשומת הזמנה - שמות עמודות מעודכנים לפי ה-SELECT שלך
             const orderResult = await transaction.request()
                 .input('customerId', sql.Int, customerId ? customerId : null) 
                 .input('address', sql.NVarChar, customerInfo.address)
@@ -30,10 +30,7 @@ router.post('/create_order', async (req, res, next) => {
 
             const orderId = orderResult.recordset[0].id;
 
-            // 2. לולאת עדכון מוצרים ומלאי
             for (const item of items) {
-                
-                // א. פירוט הזמנה - שימוש ב-unit_price כפי שמופיע בטבלה שלך
                 await transaction.request()
                     .input('orderId', sql.Int, orderId)
                     .input('productId', sql.Int, item.id)
@@ -44,7 +41,6 @@ router.post('/create_order', async (req, res, next) => {
                         VALUES (@orderId, @productId, @qty, @unitPrice)
                     `);
 
-                // ב. תיעוד עסקה - טבלת TRANSACTIONS
                 await transaction.request()
                     .input('pId', sql.Int, item.id)
                     .input('cId', sql.Int, customerId ? customerId : null)
@@ -55,7 +51,6 @@ router.post('/create_order', async (req, res, next) => {
                         VALUES (@pId, @cId, @qty, @fPrice, GETDATE())
                     `);
 
-                // ג. עדכון מלאי - וידוא שימוש ב-stock_qty
                 const updateStock = await transaction.request()
                     .input('productId', sql.Int, item.id)
                     .input('deductQty', sql.Int, item.quantity)
@@ -71,6 +66,18 @@ router.post('/create_order', async (req, res, next) => {
             }
 
             await transaction.commit();
+
+            const receiptData = {
+                orderId: orderId,
+                items: items,
+                totalAmount: totalPrice,
+                customerName: customerInfo.fullName || 'לקוח'
+            };
+
+            sendOrderReceipt(customerInfo.email, receiptData)
+                .then(() => console.log(`Receipt sent to ${customerInfo.email}`))
+                .catch(err => console.error("Email Receipt Error:", err));
+
             res.status(201).json({ message: 'הזמנה בוצעה בהצלחה', orderId });
 
         } catch (err) {
