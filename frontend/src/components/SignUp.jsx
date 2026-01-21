@@ -42,7 +42,7 @@ const SignUp = ({ isOpen, onClose, onSwitch }) => {
       await createCustomer({
         username: formData[0],
         email: formData[1],
-        password_hash: formData[2],
+        password: formData[2],
         phone: formData[3],
         city: formData[4],
         address: formData[5]

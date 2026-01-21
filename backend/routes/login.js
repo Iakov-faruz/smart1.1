@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { sql, poolPromise } = require('../db_connection.js');
+const bcrypt = require('bcrypt'); // ← נוסף
 
 router.post('/login', async (req, res, next) => {
     const { username, password } = req.body;
@@ -11,8 +12,7 @@ router.post('/login', async (req, res, next) => {
 
     try {
         const pool = await poolPromise;
-        
-        // --- עדכון השאילתה: הוספת השדות החדשים לשליפה ---
+
         const result = await pool.request()
             .input('username', sql.NVarChar, username)
             .query(`
@@ -23,19 +23,19 @@ router.post('/login', async (req, res, next) => {
 
         const user = result.recordset[0];
 
-        // 1. בדיקה אם המשתמש קיים
         if (!user) {
             return res.status(401).json({ error: 'שם משתמש או סיסמה שגויים' });
         }
 
-        // 2. בדיקת סיסמה (השוואה ישירה כפי שהגדרת)
-        if (user.password_hash !== password) {
+        // 🔐 השוואה מאובטחת עם bcrypt
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        if (!isMatch) {
             return res.status(401).json({ error: 'שם משתמש או סיסמה שגויים' });
         }
 
-        // 3. הצלחה - החזרת פרטי המשתמש המלאים (ללא הסיסמה)
+        // החזרת המשתמש ללא הסיסמה
         const { password_hash, ...userWithoutPassword } = user;
-        
+
         res.status(200).json({
             message: 'התחברת בהצלחה',
             user: userWithoutPassword

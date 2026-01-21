@@ -66,65 +66,74 @@
 const express = require('express');
 const router = express.Router();
 const { sql, poolPromise } = require('../db_connection.js');
-const { sendWelcomeEmail } = require('../services/email_service.js'); // ייבוא שירות האימייל המופרד
+const bcrypt = require('bcrypt'); // ← נדרש
+const { sendWelcomeEmail } = require('../services/email_service.js');
+
+const saltRounds = 10;
 
 router.post('/create_customer', async (req, res, next) => {
-    const { username, password_hash, email, phone, city, address } = req.body;
+  const { username, password, email, phone, city, address } = req.body; // ← password (לא hash)
 
-    if (!username || !password_hash || !email || !phone || !city || !address) {
-        return res.status(400).json({ error: 'כל השדות הם חובה' });
+  if (!username || !password || !email || !phone || !city || !address) {
+    return res.status(400).json({ error: 'כל השדות חובה' });
+  }
+
+  const usernameRegex = /^[a-zA-Z0-9א-ת\s-]+$/;
+  if (!usernameRegex.test(username)) {
+    return res.status(400).json({ error: 'שם משתמש יכול לכלול אותיות, מספרים ורווחים בלבד' });
+  }
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z]).{5,}$/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({ error: 'הסיסמה חייבת לכלול לפחות 5 תווים, אות גדולה וקטנה' });
+  }
+
+  try {
+    const pool = await poolPromise;
+
+    // בדיקה אם המשתמש או המייל קיימים
+    const checkUser = await pool.request()
+      .input('check_username', sql.NVarChar, username)
+      .input('check_email', sql.NVarChar, email)
+      .query(`
+        SELECT username, email
+        FROM [CUSTOMERS]
+        WHERE username = @check_username OR email = @check_email
+      `);
+
+    if (checkUser.recordset.length > 0) {
+      const existing = checkUser.recordset[0];
+      const msg = existing.username === username ? 'שם משתמש תפוס' : 'כתובת אימייל תפוסה';
+      return res.status(400).json({ error: msg });
     }
 
-    const usernameRegex = /^[a-zA-Z0-9א-ת\s]+$/; 
-    if (!usernameRegex.test(username)) {
-        return res.status(400).json({ error: 'שם משתמש יכול להכיל אותיות ומספרים בלבד' });
-    }
+    // הצפנת הסיסמה
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z]).{5,}$/;
-    if (!passwordRegex.test(password_hash)) {
-        return res.status(400).json({ error: 'הסיסמה חייבת לכלול לפחות 5 תווים, אות גדולה וקטנה' });
-    }
+    // שמירה ב-DB: רק ה-hash + (אופציונלי) הסיסמה הגלויה ל-DRAFT
+    await pool.request()
+      .input('username', sql.NVarChar, username)
+      .input('password_hash', sql.NVarChar, hashedPassword)
+      .input('password', sql.NVarChar, password) // ← רק לפיתוח! תמחק לפני פרודקשן
+      .input('email', sql.NVarChar, email)
+      .input('phone', sql.NVarChar, phone)
+      .input('city', sql.NVarChar, city)
+      .input('address', sql.NVarChar, address)
+      .query(`
+        INSERT INTO [CUSTOMERS] (username, password_hash, password, email, phone, city, address, loyalty_points)
+        VALUES (@username, @password_hash, @password, @email, @phone, @city, @address, 0)
+      `);
 
-    try {
-        const pool = await poolPromise;
+    // שליחת מייל
+    sendWelcomeEmail(email, username)
+      .catch(err => console.error("שגיאה בשליחת מייל:", err));
 
-        const checkUser = await pool.request()
-            .input('check_username', sql.NVarChar, username)
-            .input('check_email', sql.NVarChar, email)
-            .query(`
-                SELECT username, email 
-                FROM [CUSTOMERS] 
-                WHERE username = @check_username OR email = @check_email
-            `);
+    res.status(201).json({ message: 'ההרשמה בוצעה בהצלחה!' });
 
-        if (checkUser.recordset.length > 0) {
-            const existingUser = checkUser.recordset[0];
-            const errorMsg = existingUser.username === username ? 'שם המשתמש כבר תפוס' : 'כתובת האימייל כבר רשומה';
-            return res.status(400).json({ error: errorMsg });
-        }
-
-        await pool.request()
-            .input('username', sql.NVarChar, username)
-            .input('password_hash', sql.NVarChar, password_hash)
-            .input('email', sql.NVarChar, email)
-            .input('phone', sql.NVarChar, phone)
-            .input('city', sql.NVarChar, city)
-            .input('address', sql.NVarChar, address)
-            .query(`
-                INSERT INTO [CUSTOMERS] (username, password_hash, email, phone, city, address, loyalty_points) 
-                VALUES (@username, @password_hash, @email, @phone, @city, @address, 0)
-            `);
-
-        // --- שליחת מייל ברוך הבא ---
-        sendWelcomeEmail(email, username)
-            .then(() => console.log(`Welcome email sent to: ${email}`))
-            .catch(err => console.error("Email service error:", err));
-
-        res.status(201).json({ message: 'החשבון נוצר בהצלחה!' });
-    } catch (err) {
-        console.error("Error creating customer:", err);
-        next(err);
-    }
+  } catch (err) {
+    console.error("Error creating customer:", err);
+    res.status(500).json({ error: 'שגיאה ביצירת חשבון' });
+  }
 });
 
 module.exports = router;
