@@ -3,7 +3,14 @@
   box-sizing: border-box;
 }
 
-/* 2. הקונטיינר הראשי */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  background-color: #f4f7f6;
+  direction: rtl;
+}
+
 .app-container {
   width: 100%;
   display: block; 
@@ -11,22 +18,15 @@
   padding: 0;
 }
 
-/* 3. ה-Header המוקפא - החזרת גובה מקורי ושינוי צבע בלבד */
+/* 2. ה-Header המוקפא */
 .app-header {
-  /* הצבע הטורקיז שביקשת מהתמונה */
-  background-color: #c9e9e9 !important; 
-  
-  /* החזרת הגובה המקורי בדיוק כפי ששלחת */
-  padding: 2rem 0; 
-  
-  color: #2c3e50; /* טקסט כהה לקריאות על טורקיז */
+  background-color: #c9e9e9 !important;
+  padding: 2rem 0;
+  color: #2c3e50;
   text-align: center;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   width: 100%;
   margin: 0;
-
-  /* הקפאה */
-  position: -webkit-sticky;
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -37,7 +37,7 @@
   font-size: 2.5rem;
 }
 
-/* 4. ניווט קטגוריות */
+/* 3. ניווט קטגוריות */
 .category-nav {
   margin-top: 1.5rem;
   display: flex;
@@ -58,69 +58,150 @@
   font-weight: 500;
 }
 
-.category-nav button.active {
-  background: #3498db;
-}
+.category-nav button.active { background: #3498db; }
+.category-nav button:hover { background: #2980b9; }
 
-.category-nav button:hover {
-  background: #2980b9;
-}
-
-/* 5. גריד המוצרים - פריסה צפופה של 180px */
+/* 4. גריד המוצרים */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 15px;
-  padding: 20px;
+  gap: 25px;
+  padding: 30px;
   width: 100%;
   margin: 0;
+  justify-items: center;
 }
 
-/* 6. כרטיס המוצר */
+/* 5. כרטיס המוצר */
 .product-card {
   background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-  border: 1px solid #eee;
+  border-radius: 15px;
+  padding: 15px 15px 25px 15px; 
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  border: 1px solid #f0f0f0;
   text-align: right;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  max-width: 180px; 
+  width: 100%;
+  min-height: 300px; 
+  height: 100%;
 }
 
-.product-card:hover {
-  transform: translateY(-5px);
+.product-info h3 {
+  font-size: 1.1rem;
+  margin: 0 0 8px 0;
+  min-height: 2.8rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: #2c3e50;
+  text-align: center;
+  text-overflow: ellipsis;
 }
 
 .price {
   color: #27ae60;
-  font-weight: bold;
+  font-weight: 800;
   font-size: 1.2rem;
-  margin: 10px 0;
+  margin-bottom: 10px;
+  text-align: center;
 }
 
-.add-to-cart {
+/* מיכל הפעולות */
+.product-actions-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: auto;
+}
+
+/* קיבוע גובה אחיד לבורר הכמויות ולהודעת ה"אזל" */
+.user-qty-selector-wrapper, .out-of-stock-wrapper {
+  height: 45px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.user-qty-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  background: #f8f9fa;
+  border-radius: 30px;
+  padding: 6px 15px;
+  border: 1px solid #e9ecef;
+}
+
+/* קיבוע גובה אחיד לכפתורי הפעולה */
+.add-to-cart, .delete-action-btn {
+  height: 45px;
   background: #3498db;
   color: white;
   border: none;
-  padding: 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: bold;
-  margin-top: 15px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.95rem;
 }
 
-/* 7. מוצר שאזל מהמלאי */
-.product-card.out-of-stock {
-  opacity: 0.6;
-  filter: grayscale(0.5);
+.add-to-cart:disabled {
+  background-color: #bdc3c7;
   cursor: not-allowed;
-  border: 1px dashed #ccc;
 }
 
-.no-stock {
-  color: #e74c3c !important;
+/* הודעת "אזל מהמלאי" עם המסגרת - מחליפה את בורר הכמות */
+.out-of-stock-msg {
+  color: #e74c3c;
   font-weight: bold;
+  font-size: 0.85rem;
+  text-align: center;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #fab1a0;
+  background-color: #fff5f5;
+  border-radius: 8px;
+}
+
+/* 6. אנימציית טעינה */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  gap: 20px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 7. Toastify */
+.Toastify__toast {
+  border-radius: 12px !important;
+  padding: 16px 24px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
 }

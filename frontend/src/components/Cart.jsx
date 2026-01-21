@@ -1,17 +1,16 @@
 import React from 'react';
+import { toast } from 'react-toastify';
 import CartItem from './CartItem';
 import '../styles/Cart.css';
 
 const Cart = ({ cartItems, setCartItems, onStartCheckout }) => {
 
-  // פונקציה להגדלת כמות
   const increaseQuantity = (id) => {
     setCartItems(cartItems.map(item =>
       item.id === id ? { ...item, quantity: item.quantity + 1 } : item
     ));
   };
 
-  // פונקציה להקטנת כמות
   const decreaseQuantity = (id) => {
     setCartItems(cartItems.map(item =>
       item.id === id && item.quantity > 1
@@ -20,20 +19,44 @@ const Cart = ({ cartItems, setCartItems, onStartCheckout }) => {
     ));
   };
 
-  // פונקציה להסרת פריט בודד
   const removeItem = (id) => {
     setCartItems(cartItems.filter(item => item.id !== id));
   };
 
-  // --- פונקציה חדשה: ריקון כל הסל ---
+  // פונקציית ריקון סל עם עיצוב מותאם
   const handleClearCart = () => {
-    const confirmClear = window.confirm("האם אתה בטוח שברצונך לרוקן את כל הסל?");
-    if (confirmClear) {
-      setCartItems([]);
-    }
+    toast.dismiss(); 
+
+    toast(
+      <div className="modern-confirm-toast">
+        <p>לרוקן את כל המוצרים מהסל?</p>
+        <div className="confirm-actions">
+          <button 
+            className="btn-confirm-red" 
+            onClick={() => {
+              setCartItems([]);
+              toast.dismiss();
+              toast.info("הסל רוקן בהצלחה");
+            }}
+          >
+            כן, רוקן הכל
+          </button>
+          <button className="btn-confirm-green" onClick={() => toast.dismiss()}>
+            ביטול
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center", 
+        autoClose: 7000, 
+        closeOnClick: false,
+        draggable: false,
+        hideProgressBar: true,
+        icon: false,
+      }
+    );
   };
 
-  // חישוב סכום כולל
   const totalPrice = cartItems.reduce(
     (sum, item) => sum + (item.price * item.quantity),
     0
@@ -70,18 +93,11 @@ const Cart = ({ cartItems, setCartItems, onStartCheckout }) => {
                 <span className="total-price">₪{totalPrice.toFixed(2)}</span>
               </div>
               
-              <button
-                className="checkout-btn"
-                onClick={onStartCheckout}
-              >
+              <button className="checkout-btn" onClick={onStartCheckout}>
                 המשך לתשלום
               </button>
 
-              {/* כפתור ריקון סל חדש */}
-              <button 
-                className="clear-cart-btn"
-                onClick={handleClearCart}
-              >
+              <button className="clear-cart-btn" onClick={handleClearCart}>
                 <span className="trash-icon">🗑️</span>
                 רוקן את הסל
               </button>
