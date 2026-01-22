@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as XLSX from 'xlsx'; // ייבוא ספריית האקסל
 import CategoryButtons from './CategoryButtons';
 import Cart from './Cart';
 import SignIn from './SignIn';
@@ -29,6 +30,39 @@ const Header = ({
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [logoClicks, setLogoClicks] = useState(0);
 
+  // פונקציית ייצוא לאקסל
+  const exportToExcel = () => {
+    try {
+      if (!categories || categories.length === 0) {
+        alert("אין נתונים לייצוא");
+        return;
+      }
+
+      // הכנת המידע בפורמט נקי
+      const dataToExport = categories.map(product => ({
+        "ברקוד (SKU)": product.sku || 'N/A',
+        "שם המוצר": product.ProductName || product.name,
+        "קטגוריה": product.CategoryName,
+        "מחיר מקורי": product.original_price,
+        "מלאי": product.stock_qty,
+        "תאריך תפוגה": product.expiry_date ? new Date(product.expiry_date).toLocaleDateString('he-IL') : 'ללא',
+        "הנחה %": product.discountPercent || 0,
+        "מחיר סופי": product.finalPrice || product.original_price
+      }));
+
+      // יצירת הקובץ והורדה
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory");
+      
+      const fileName = `Inventory_Report_${new Date().toLocaleDateString('he-IL').replace(/\./g, '-')}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+    } catch (err) {
+      console.error("Excel Export Error:", err);
+      alert("שגיאה בתהליך הייצוא");
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('user');
     onUserChange(null); 
@@ -36,10 +70,8 @@ const Header = ({
   };
 
   const handleAdminLogout = () => {
-    // ניקוי הזיכרון של האדמין כדי שלא יחזור בריענון
     localStorage.removeItem('admin_user');
     onAdminChange(null);
-    // שינוי ה-URL חזרה לראשי ללא רענון דף
     window.history.pushState({}, '', '/');
     alert("יצאת ממערכת הניהול.");
   };
@@ -69,12 +101,19 @@ const Header = ({
         <div className="auth-nav">
           {admin ? (
             <div className="admin-logged-in">
+              {/* כפתור ייצוא לאקסל למנהל */}
+              <button className="auth-btn export-btn" onClick={exportToExcel}>
+                📥 ייצוא מלאי
+              </button>
+
               <button className="auth-btn add-product-btn" onClick={() => setIsAddProductOpen(true)}>
                 ➕ הוסף מוצר
               </button>
+              
               <button className="auth-btn admin-panel-btn" onClick={() => window.history.pushState({}, '', '/admin-dashboard')}>
                 🛠 לוח בקרה
               </button>
+              
               <button className="logout-btn" onClick={handleAdminLogout}>יציאה</button>
             </div>
           ) : user ? (
@@ -94,20 +133,21 @@ const Header = ({
 
         <CategoryButtons 
           categories={categories} 
-          onSelectCategory={onSelectCategory}
+          onSelectCategory={onSelectCategory} 
           selectedCategory={selectedCategory}
         />
 
         <div className="logo">
-          <h1 onClick={handleLogoClick} style={{ cursor: 'default', userSelect: 'none' }}>Smart Shop</h1>
+          <h1 onClick={handleLogoClick} style={{ cursor: 'pointer', userSelect: 'none' }}>Smart Shop</h1>
         </div>
       </header>
 
+      {/* מודאלים */}
       <SignIn isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} onUserChange={onUserChange} onSwitch={() => { setIsLoginOpen(false); setIsSignupOpen(true); }} />
       <SignUp isOpen={isSignupOpen} onClose={() => setIsSignupOpen(false)} onSwitch={() => { setIsSignupOpen(false); setIsLoginOpen(true); }} />
       <UserProfile user={user} isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
       <AdminLogin isOpen={isAdminLoginOpen} onClose={() => setIsAdminLoginOpen(false)} onAdminChange={onAdminChange} />
-
+      
       <AddProductModal 
         isOpen={isAddProductOpen} 
         onClose={() => setIsAddProductOpen(false)} 
@@ -115,6 +155,7 @@ const Header = ({
         onRefresh={onRefresh} 
       />
 
+      {/* Drawer של הסל */}
       {showCart && (
         <div className="cart-overlay" onClick={() => setShowCart(false)}>
           <div className="cart-drawer" onClick={(e) => e.stopPropagation()}>

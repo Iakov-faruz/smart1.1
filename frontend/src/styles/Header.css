@@ -191,3 +191,19 @@
     user-select: none; /* מונע סימון בכחול של הטקסט כשלוחצים מהר */
     -webkit-user-select: none;
 }
+.export-btn {
+    background-color: #27ae60 !important; /* צבע ירוק אקסל */
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: bold;
+    border: 1px solid #219150;
+    transition: all 0.2s ease;
+}
+
+.export-btn:hover {
+    background-color: #1e8449 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
