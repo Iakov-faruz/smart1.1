@@ -5,7 +5,7 @@ import SignIn from './SignIn';
 import SignUp from './SignUp';
 import UserProfile from './UserProfile';
 import AdminLogin from './AdminLogin'; 
-import AddProductModal from './AddProductModal'; // ייבוא המודאל החדש
+import AddProductModal from './AddProductModal';
 import '../styles/Header.css';
 
 const Header = ({ 
@@ -19,26 +19,28 @@ const Header = ({
   onUserChange,
   admin,         
   onAdminChange,
-  onRefresh     // פונקציית רענון מה-App
+  onRefresh     
 }) => {
   const [showCart, setShowCart] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
-  
-  // מצב חדש למודאל הוספת מוצר
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [logoClicks, setLogoClicks] = useState(0);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     onUserChange(null); 
-    alert("התנתקת מהמערכת, הסל רוקן.");
+    alert("התנתקת מהמערכת.");
   };
 
   const handleAdminLogout = () => {
+    // ניקוי הזיכרון של האדמין כדי שלא יחזור בריענון
+    localStorage.removeItem('admin_user');
     onAdminChange(null);
+    // שינוי ה-URL חזרה לראשי ללא רענון דף
+    window.history.pushState({}, '', '/');
     alert("יצאת ממערכת הניהול.");
   };
 
@@ -67,12 +69,10 @@ const Header = ({
         <div className="auth-nav">
           {admin ? (
             <div className="admin-logged-in">
-              {/* כפתור הוספת מוצר חדש - למנהל בלבד */}
               <button className="auth-btn add-product-btn" onClick={() => setIsAddProductOpen(true)}>
                 ➕ הוסף מוצר
               </button>
-              
-              <button className="auth-btn admin-panel-btn" onClick={() => window.location.href='/admin-dashboard'}>
+              <button className="auth-btn admin-panel-btn" onClick={() => window.history.pushState({}, '', '/admin-dashboard')}>
                 🛠 לוח בקרה
               </button>
               <button className="logout-btn" onClick={handleAdminLogout}>יציאה</button>
@@ -103,13 +103,11 @@ const Header = ({
         </div>
       </header>
 
-      {/* מודאלים קיימים */}
       <SignIn isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} onUserChange={onUserChange} onSwitch={() => { setIsLoginOpen(false); setIsSignupOpen(true); }} />
       <SignUp isOpen={isSignupOpen} onClose={() => setIsSignupOpen(false)} onSwitch={() => { setIsSignupOpen(false); setIsLoginOpen(true); }} />
       <UserProfile user={user} isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
       <AdminLogin isOpen={isAdminLoginOpen} onClose={() => setIsAdminLoginOpen(false)} onAdminChange={onAdminChange} />
 
-      {/* מודאל הוספת מוצר חדש */}
       <AddProductModal 
         isOpen={isAddProductOpen} 
         onClose={() => setIsAddProductOpen(false)} 
@@ -117,7 +115,6 @@ const Header = ({
         onRefresh={onRefresh} 
       />
 
-      {/* סל קניות */}
       {showCart && (
         <div className="cart-overlay" onClick={() => setShowCart(false)}>
           <div className="cart-drawer" onClick={(e) => e.stopPropagation()}>

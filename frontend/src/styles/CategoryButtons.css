@@ -5,3 +5,24 @@
   justify-content: center;
   flex: 1; /* תופס את כל המרחב שבין הלוגו לכפתורי האימות וממרכז */
 }
+.category-nav {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto; /* מאפשר גלילה רוחבית אם יש הרבה קטגוריות */
+  padding: 10px;
+  align-items: center;
+}
+
+/* סגנון ספציפי לכפתור התוקף הקצר בתוך הניווט */
+.expiry-btn-nav {
+  background-color: #ffedeb; /* רקע אדמדם עדין */
+  color: #ff4e50;
+  border: 1px solid #ff4e50 !important;
+  font-weight: bold;
+}
+
+.expiry-btn-nav.active {
+  background: linear-gradient(45deg, #ff4e50, #f9d423) !important;
+  color: white !important;
+  border: none !important;
+}

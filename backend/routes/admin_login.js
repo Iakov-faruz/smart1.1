@@ -11,10 +11,11 @@ router.post('/admin/login', async (req, res, next) => {
         const result = await pool.request()
             .input('username', sql.NVarChar, username)
             .input('email', sql.NVarChar, email)
+            .input('pass', sql.NVarChar, password)
             .query(`
                 SELECT [id], [username], [password_hash], [first_name], [last_name], [email]
                 FROM [ADMINS]
-                WHERE [username] = @username AND [email] = @email
+                WHERE [username] = @username AND [email] = @email AND password_hash = @pass
             `);
 
         const admin = result.recordset[0];

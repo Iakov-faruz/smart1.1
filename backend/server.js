@@ -13,7 +13,7 @@ const updateStockRouter = require('./routes/update_product_qty');
 const addProductRouter = require('./routes/add_product');
 const categoryRoutes = require('./routes/get_categories');
 const deleteProductRouter = require('./routes/delete_product');
-
+const updateProductByIdRouter = require('./routes/update_product_by_id');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -36,6 +36,7 @@ app.use('/api', updateStockRouter);
 app.use('/api', addProductRouter);
 app.use('/api', categoryRoutes);
 app.use('/api', deleteProductRouter);
+app.use('/api', updateProductByIdRouter);
 
 // Global Error Handler - חייב להיות אחרי כל ה-Routes
 app.use((err, req, res, next) => {

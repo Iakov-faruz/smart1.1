@@ -1,144 +1,131 @@
-/* מבנה הכרטיס המקורי */
 .product-card {
-    position: relative;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    background: #fff;
-    transition: all 0.5s ease;
+    border: 1px solid #ddd; border-radius: 8px; padding: 15px;
+    display: flex; flex-direction: column; background: #fff; position: relative;
+}
+.discount-badge-inline {
+    background: #ff4e50; color: white; padding: 2px 8px;
+    border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; display: inline-block;
+}
+.price-wrapper { display: flex; gap: 10px; justify-content: center; align-items: center; }
+.price-new { color: #ff4e50; font-weight: 800; font-size: 1.3rem; }
+.price-old { text-decoration: line-through; color: #999; font-size: 0.9rem; }
+.user-qty-selector {
+    display: flex; align-items: center; gap: 10px; background: #f8f9fa;
+    padding: 5px 15px; border-radius: 20px; border: 1px solid #eee; width: fit-content; margin: 0 auto 10px;
+}
+.user-qty-selector button {
+    width: 25px; height: 25px; border-radius: 50%; border: none;
+    background: #3498db; color: white; cursor: pointer;
+}
+.add-to-cart {
+    width: calc(100% + 30px); margin: 0 -15px -15px; padding: 12px;
+    background: #27ae60; color: white; border: none; border-radius: 0 0 8px 8px; cursor: pointer;
+}
+/* סימון כרטיס שניתן לעריכה על ידי אדמין */
+.product-card.admin-editable {
+    cursor: pointer;
+    border-style: dashed; /* מסגרת מקווקוות נותנת תחושה של "ניתן לעריכה" */
 }
 
-/* אנימציית היעלמות */
-.product-card.fade-out {
-    opacity: 0;
-    transform: scale(0.8) translateY(20px);
-    pointer-events: none;
+.product-card.admin-editable:hover {
+    background-color: #f0f7ff; /* שינוי צבע קל בריחוף */
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
-
-/* מיקום קבוע לבורר הכמויות בתחתית הכרטיס */
-.user-qty-selector-wrapper {
-    margin-top: auto; /* דוחף את הבורר לתחתית לפני הכפתורים */
-    padding: 10px 0;
-    display: flex;
-    justify-content: center;
-}
-
-/* בורר כמויות מעוגל וצף */
+/* --- עיצוב בורר הכמות ללקוח --- */
 .user-qty-selector {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 6px 15px;
+    gap: 15px; /* הגדלתי מעט את הרווח */
     background: #f8f9fa;
-    border-radius: 30px;
-    border: 1px solid #e9ecef;
+    padding: 5px 15px;
+    border-radius: 20px;
+    border: 1px solid #eee;
+    width: fit-content;
+    margin: 10px auto; /* מרכוז ורווח מלמעלה/למטה */
 }
 
 .user-qty-selector button {
-    width: 26px;
-    height: 26px;
-    border: none;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    background-color: #3498db; /* צבע כחול לכפתורי הכמות */
+    border: none;
+    background: #3498db;
     color: white;
-    font-weight: bold;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
     transition: background 0.2s;
 }
 
-.user-qty-selector button:hover:not(:disabled) {
-    background-color: #2980b9;
+.user-qty-selector button:hover {
+    background: #2980b9;
 }
 
 .user-qty-selector button:disabled {
-    background-color: #ced4da;
+    background: #ccc;
     cursor: not-allowed;
 }
 
 .qty-value {
-    font-weight: 700;
+    font-weight: bold;
     font-size: 1.1rem;
-    min-width: 25px;
+    min-width: 20px;
     text-align: center;
-    color: #495057;
 }
 
-/* כפתורי הניהול (פלוס/מינוס אדמין) */
-.admin-stock-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 10px 0;
-    padding: 5px;
-    background: #f0f0f0;
-    border-radius: 4px;
-    justify-content: center;
+/* --- עיצוב תצוגת מנהל בתוך הכרטיס --- */
+.admin-preview {
+    background: #fff4e5; /* צבע רקע עדין להדגשה */
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ffd8a8;
+    margin-bottom: 10px;
+    text-align: center;
 }
 
-.stock-btn {
-    width: 30px;
-    height: 30px;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    font-weight: bold;
-    background: #2c3e50; /* צבע כהה לאדמין כפי שהיה במקור */
-    color: white;
+.admin-preview p {
+    margin: 0;
+    color: #d9480f;
+    font-size: 0.95rem;
 }
 
-/* כפתור מחיקה (אדום-לבן) */
-.delete-action-btn {
-    width: calc(100% + 30px);
-    margin: 5px -15px -15px -15px; 
-    padding: 12px;
-    background-color: #fff;
-    color: #e74c3c;
-    border: 1px solid #e74c3c;
-    border-radius: 0 0 8px 8px;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
+.edit-hint {
+    display: block;
+    color: #868e96;
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
+/* --- התאמות נוספות לכרטיס --- */
+.product-card.admin-editable-card {
+    border: 2px dashed #3498db; /* מסגרת בולטת יותר למנהל */
     transition: all 0.3s ease;
 }
 
-.delete-action-btn:hover {
-    background-color: #e74c3c;
-    color: white;
+.product-card.admin-editable-card:hover {
+    background-color: #f0f7ff;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.2);
 }
 
-/* כפתור הוספה לסל (ירוק) */
-.add-to-cart {
+/* כפתור מחיקה לאדמין */
+.delete-action-btn {
     width: calc(100% + 30px);
-    margin: 5px -15px -15px -15px; 
+    margin: 0 -15px -15px;
     padding: 12px;
-    border: none;
-    background-color: #27ae60;
+    background: #e74c3c;
     color: white;
-    font-weight: bold;
-    cursor: pointer;
+    border: none;
     border-radius: 0 0 8px 8px;
-}
-
-.add-to-cart:hover:not(:disabled) {
-    background-color: #219150;
-}
-
-.add-to-cart:disabled {
-    background-color: #bdc3c7;
-}
-
-.out-of-stock-msg {
-    color: #e74c3c;
+    cursor: pointer;
     font-weight: bold;
-    text-align: center;
+    transition: background 0.2s;
+}
+
+.delete-action-btn:hover {
+    background: #c0392b;
 }

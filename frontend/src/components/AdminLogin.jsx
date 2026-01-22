@@ -25,30 +25,23 @@ const AdminLogin = ({ isOpen, onClose, onAdminChange }) => {
     setError('');
     setLoading(true);
 
-    // לוג 1: בדיקת הנתונים שנשלחים מהקומפוננטה
-    console.log("--- Front-end: ניסיון התחברות אדמין ---");
-    console.log("נתונים שנשלחים ל-API:", credentials);
-
     try {
-      // קריאה לפונקציית ה-API
       const data = await loginAdmin(credentials.username, credentials.email, credentials.password);
       
-      // לוג 2: בדיקת התגובה שהתקבלה בהצלחה מהשרת
-      console.log("--- Front-end: תגובה מוצלחת מהשרת ---");
-      console.log("מידע שהתקבל:", data);
+      // שמירה ב-LocalStorage
+      localStorage.setItem('admin_user', JSON.stringify(data.admin));
       
+      // עדכון ה-State באפליקציה (זה מה שמשנה את התצוגה בפועל)
       onAdminChange(data.admin);
       
       alert(`שלום ${data.admin.first_name}, גישת מנהל אושרה!`);
       onClose();
       
-      // העברה לדף הניהול
-      window.location.href = '/admin-dashboard'; 
-    } catch (err) {
-      // לוג 3: פירוט השגיאה במקרה של כישלון
-      console.error("--- Front-end: שגיאה בתהליך ההתחברות ---");
-      console.error("פירוט השגיאה:", err.message);
+      // שינוי הכתובת ב-URL ללא רענון דף
+      window.history.pushState({}, '', '/admin-dashboard'); 
       
+    } catch (err) {
+      console.error("Login error:", err.message);
       setError(err.message || 'פרטי זיהוי מנהל שגויים');
     } finally {
       setLoading(false);
@@ -69,34 +62,20 @@ const AdminLogin = ({ isOpen, onClose, onAdminChange }) => {
         <form className="auth-form" onSubmit={handleLogin}>
           <div className="input-group">
             <input 
-              type="text" 
-              name="username" // מוודא שזה תואם למפתח ב-credentials
-              placeholder="שם משתמש אדמין" 
-              value={credentials.username}
-              onChange={handleChange}
-              required 
+              type="text" name="username" placeholder="שם משתמש אדמין" 
+              value={credentials.username} onChange={handleChange} required 
             />
           </div>
-
           <div className="input-group">
             <input 
-              type="email" 
-              name="email"
-              placeholder="כתובת אימייל" 
-              value={credentials.email}
-              onChange={handleChange}
-              required 
+              type="email" name="email" placeholder="כתובת אימייל" 
+              value={credentials.email} onChange={handleChange} required 
             />
           </div>
-
           <div className="input-group">
             <input 
-              type="password" 
-              name="password"
-              placeholder="סיסמה" 
-              value={credentials.password}
-              onChange={handleChange}
-              required 
+              type="password" name="password" placeholder="סיסמה" 
+              value={credentials.password} onChange={handleChange} required 
             />
           </div>
 

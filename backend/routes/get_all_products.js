@@ -6,7 +6,7 @@ router.get('/products', async (req, res) => {
     try {
         const pool = await poolPromise;
         const result = await pool.request()
-            .query('SELECT * FROM PRODUCTS WHERE is_active = 1');
+            .query('SELECT * FROM PRODUCTS WHERE is_active = 1 ORDER BY name ASC');
         
         res.json(result.recordset);
     } catch (err) {

@@ -8,6 +8,7 @@ router.get('/categories', async (req, res) => {
         const result = await pool.request().query(`
             SELECT [id], [name] 
             FROM [Smartshop].[dbo].[CATEGORIES]
+            ORDER BY [name] ASC
         `);
         res.json(result.recordset);
     } catch (err) {

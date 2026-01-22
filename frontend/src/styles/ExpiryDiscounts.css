@@ -1,0 +1,84 @@
+.expiry-discounts-bar {
+  background: linear-gradient(90deg, #ff4e50 0%, #f9d423 100%);
+  color: white;
+  padding: 45px 0; 
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  font-family: 'Assistant', sans-serif;
+  z-index: 99;
+  width: 100%;
+}
+
+.marquee-container {
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+}
+
+.marquee-content {
+  display: flex;
+  gap: 60px; /* רווח גדול בין מוצר למוצר בשיירה */
+  white-space: nowrap;
+  min-width: 100%;
+  /* אנימציה איטית מאוד - 50 שניות */
+  animation: slideRightContinuous 50s linear infinite;
+}
+
+/* מוודא שהמוצרים לא יתכווצו וישמרו על הגודל שלהם */
+.discount-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-shrink: 0; 
+}
+
+/* האנימציה - נכנס משמאל ויוצא מימין */
+@keyframes slideRightContinuous {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100vw);
+  }
+}
+
+/* עצירה במעבר עכבר */
+.expiry-discounts-bar:hover .marquee-content {
+  animation-play-state: paused;
+}
+
+/* שאר העיצוב שלך ללא שינוי */
+.badge {
+  background: #fff;
+  color: #ff4e50;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.product-name {
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.old-price {
+  text-decoration: line-through;
+  opacity: 0.7;
+  font-size: 1.1rem;
+}
+
+.new-price {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.discount-tag {
+  background: rgba(0,0,0,0.2);
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
