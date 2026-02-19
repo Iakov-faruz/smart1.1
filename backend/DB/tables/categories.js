@@ -1,0 +1,6 @@
+module.exports = `
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'CATEGORIES')
+CREATE TABLE CATEGORIES (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    name NVARCHAR(100) NOT NULL
+);`;

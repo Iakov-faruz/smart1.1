@@ -7,7 +7,10 @@
   "type": "commonjs",
   "main": "server.js",
   "scripts": {
+    "db:create": "node DB/createDB.js",
+    "db:seed": "node DB/insert_values.js",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "db:full-setup": "node DB/createDB.js && node DB/insert_values.js",
     "dev": "nodemon server.js",
     "start": "node server.js"
   },
@@ -16,6 +19,8 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "jsonwebtoken": "^9.0.3",
     "mssql": "^12.2.0",
     "nodemailer": "^7.0.12",
     "nodemon": "^3.1.11"

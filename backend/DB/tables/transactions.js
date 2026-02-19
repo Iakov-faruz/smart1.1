@@ -1,0 +1,10 @@
+module.exports = `
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TRANSACTIONS')
+CREATE TABLE TRANSACTIONS (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    product_id INT FOREIGN KEY REFERENCES PRODUCTS(id),
+    customer_id INT FOREIGN KEY REFERENCES CUSTOMERS(id),
+    quantity INT,
+    final_price DECIMAL(10,2),
+    sale_date DATETIME DEFAULT GETDATE()
+);`;

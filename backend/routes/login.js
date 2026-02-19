@@ -1,49 +1,40 @@
 const express = require('express');
 const router = express.Router();
 const { sql, poolPromise } = require('../db_connection.js');
-const bcrypt = require('bcrypt'); // ← נוסף
+const bcrypt = require('bcrypt');
 
-router.post('/login', async (req, res, next) => {
-    const { username, password } = req.body;
+router.post('/login', async (req, res) => {
+    const { username, password } = req.body; // מקבל username מהפרונט
 
     if (!username || !password) {
-        return res.status(400).json({ error: 'נא להזין שם משתמש וסיסמה' });
+        return res.status(400).json({ error: 'Username and password are required' });
     }
 
     try {
         const pool = await poolPromise;
-
+        // שאילתה לפי עמודת username
         const result = await pool.request()
-            .input('username', sql.NVarChar, username)
-            .query(`
-                SELECT [id], [username], [password_hash], [email], [loyalty_points], [phone], [city], [address]
-                FROM [CUSTOMERS]
-                WHERE [username] = @username
-            `);
+            .input('username', sql.NVarChar(100), username)
+            .query('SELECT * FROM [Smartshop].[dbo].[CUSTOMERS] WHERE username = @username');
+
+        if (result.recordset.length === 0) {
+            console.warn(`[Login Attempt] Failed: Username not found (${username})`);
+            return res.status(401).json({ error: 'Invalid username or password' });
+        }
 
         const user = result.recordset[0];
-
-        if (!user) {
-            return res.status(401).json({ error: 'שם משתמש או סיסמה שגויים' });
-        }
-
-        // 🔐 השוואה מאובטחת עם bcrypt
         const isMatch = await bcrypt.compare(password, user.password_hash);
+
         if (!isMatch) {
-            return res.status(401).json({ error: 'שם משתמש או סיסמה שגויים' });
+            return res.status(401).json({ error: 'Invalid username or password' });
         }
 
-        // החזרת המשתמש ללא הסיסמה
-        const { password_hash, ...userWithoutPassword } = user;
-
-        res.status(200).json({
-            message: 'התחברת בהצלחה',
-            user: userWithoutPassword
-        });
+        const { password_hash, password: plainPass, ...userProfile } = user;
+        res.status(200).json({ message: 'Login successful', user: userProfile });
 
     } catch (err) {
-        console.error("Login Error:", err.message);
-        next(err);
+        console.error('[Database Error] Login failed:', err.message);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

@@ -1,60 +1,108 @@
 const express = require('express');
 const router = express.Router();
-const { poolPromise } = require('../db_connection.js');
+const { sql, poolPromise } = require('../db_connection.js');
 
+const isDev = process.env.NODE_ENV !== 'production';
+
+/**
+ * עדכון מלאי חכם - מותאם למבנה טבלת PRODUCTS
+ */
 router.put('/products/update/:id', async (req, res) => {
     const { id } = req.params;
-    // שים לב: הורדנו את category_id מה-body, השרת יטפל בזה לבד
     const { name, original_price, expiry_date, stock_qty, sku } = req.body;
+
+    if (!expiry_date || stock_qty === undefined) {
+        return res.status(400).json({ error: 'חובה לספק תאריך תפוגה וכמות מלאי' });
+    }
+
+    const finalPrice = Math.max(0, parseFloat(original_price) || 0);
+    const finalQty = Math.max(0, parseInt(stock_qty) || 0);
+
+    let transaction;
 
     try {
         const pool = await poolPromise;
-        
-        // המרה בטוחה למספרים למניעת NaN
-        const finalPrice = isNaN(parseFloat(original_price)) ? 0 : parseFloat(original_price);
-        const finalQty = isNaN(parseInt(stock_qty)) ? 0 : parseInt(stock_qty);
-        const safeName = name ? name.replace(/'/g, "''") : null;
+        transaction = new sql.Transaction(pool);
+        await transaction.begin();
 
-        await pool.request().query(`
-            -- 1. שליפת הקטגוריה והשם המקוריים מהמוצר הקיים
-            DECLARE @OriginalCatID INT;
-            DECLARE @OriginalName NVARCHAR(255);
+        const request = new sql.Request(transaction);
 
-            SELECT TOP 1 @OriginalCatID = [category_id], @OriginalName = [name]
+        request.input('id', sql.Int, id);
+        request.input('sku', sql.NVarChar(50), sku || ''); 
+        request.input('name', sql.NVarChar(255), name || null);
+        request.input('price', sql.Decimal(10, 2), finalPrice);
+        request.input('qty', sql.Int, finalQty);
+        request.input('expiry', sql.Date, expiry_date);
+
+        const query = `
+            DECLARE @TargetCatID INT;
+            DECLARE @TargetCatName NVARCHAR(255);
+            DECLARE @TargetName NVARCHAR(255);
+            DECLARE @TargetSKU NVARCHAR(50) = @sku;
+
+            -- 1. שליפת פרטי המקור (כולל category_name שקיים אצלך בטבלה)
+            SELECT TOP 1 
+                @TargetCatID = [category_id], 
+                @TargetCatName = [category_name],
+                @TargetName = [name],
+                @TargetSKU = ISNULL(NULLIF(@TargetSKU, ''), [sku])
             FROM [Smartshop].[dbo].[PRODUCTS]
-            WHERE [id] = ${id} OR [sku] = '${sku}';
+            WHERE [id] = @id OR ([sku] = @TargetSKU AND @TargetSKU <> '');
 
-            -- 2. בדיקה אם קיימת כבר אצווה עם אותו SKU ותאריך תפוגה
-            IF EXISTS (SELECT 1 FROM [Smartshop].[dbo].[PRODUCTS] WHERE [sku] = '${sku}' AND [expiry_date] = '${expiry_date}')
+            -- 2. בדיקה אם המוצר קיים
+            IF @TargetCatID IS NULL
             BEGIN
-                -- עדכון אצווה קיימת (הוספת מלאי ועדכון מחיר/שם)
+                RAISERROR('המוצר לא נמצא במערכת', 16, 1);
+                RETURN;
+            END
+
+            -- 3. בדיקה אם קיימת אצווה פעילה עם אותו SKU ותאריך תפוגה
+            IF EXISTS (
+                SELECT 1 FROM [Smartshop].[dbo].[PRODUCTS] 
+                WHERE [sku] = @TargetSKU AND [expiry_date] = @expiry AND [is_active] = 1
+            )
+            BEGIN
+                -- עדכון: הוספת מלאי לאצווה קיימת
                 UPDATE [Smartshop].[dbo].[PRODUCTS]
-                SET [stock_qty] = [stock_qty] + ${finalQty},
-                    [original_price] = ${finalPrice},
-                    [name] = ISNULL(N'${safeName}', [name])
-                WHERE [sku] = '${sku}' AND [expiry_date] = '${expiry_date}'
+                SET [stock_qty] = [stock_qty] + @qty,
+                    [original_price] = @price,
+                    [name] = ISNULL(@name, [name])
+                WHERE [sku] = @TargetSKU AND [expiry_date] = @expiry AND [is_active] = 1;
             END
             ELSE
             BEGIN
-                -- יצירת אצווה חדשה (שורה חדשה) עם הקטגוריה המקורית ששלפנו
+                -- יצירה: הוספת אצווה חדשה עם אותה קטגוריה
                 INSERT INTO [Smartshop].[dbo].[PRODUCTS] 
-                ([sku], [name], [original_price], [expiry_date], [stock_qty], [category_id], [is_active])
+                    ([name], [original_price], [expiry_date], [stock_qty], [category_id], [is_active], [category_name], [sku])
                 VALUES (
-                    '${sku}', 
-                    ISNULL(N'${safeName}', @OriginalName), 
-                    ${finalPrice}, 
-                    '${expiry_date}', 
-                    ${finalQty}, 
-                    @OriginalCatID, -- שימוש בקטגוריה המקורית מה-DB
-                    1
-                )
+                    ISNULL(@name, @TargetName),
+                    @price,
+                    @expiry,
+                    @qty,
+                    @TargetCatID,
+                    1,
+                    @TargetCatName,
+                    @TargetSKU
+                );
             END
-        `);
-        
-        res.json({ message: 'המלאי עודכן בהצלחה' });
+        `;
+
+        await request.query(query);
+        await transaction.commit();
+
+        res.status(200).json({ 
+            message: 'המלאי עודכן בהצלחה',
+            sku: sku,
+            addedQty: finalQty 
+        });
+
     } catch (err) {
-        console.error("SQL Error:", err.message);
-        res.status(500).json({ error: 'שגיאה במסד הנתונים', details: err.message });
+        if (transaction) await transaction.rollback();
+        console.error("❌ Database Update Error:", err.message);
+        res.status(500).json({ 
+            error: 'שגיאה בעדכון המלאי',
+            details: isDev ? err.message : null 
+        });
     }
 });
 
